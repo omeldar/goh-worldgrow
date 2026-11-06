@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "worldgrow",
+  "version": "${version}",
+  "name": "Worldgrow",
+  "description": "Grows the map without the stutter: generates the chunks behind a world border in the background, on a budget, and stops the moment the server starts falling behind. Unofficial: not made or endorsed by Mojang or Microsoft.",
+  "authors": ["omeldar"],
+  "contact": {
+    "homepage": "https://github.com/omeldar/goh-worldgrow",
+    "sources": "https://github.com/omeldar/goh-worldgrow",
+    "issues": "https://github.com/omeldar/goh-worldgrow/issues"
+  },
+  "license": "MIT",
+  "environment": "server",
+  "entrypoints": {
+    "server": ["com.omeldar.worldgrow.WorldgrowServer"]
+  },
+  "accessWidener": "worldgrow.accesswidener",
+  "depends": {
+    "fabricloader": ">=0.18.3",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": ">=0.141.3"
+  }
+}
