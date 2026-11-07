@@ -44,6 +44,8 @@ public final class Job {
     public long index;
     public long generated;
     public boolean paused;
+    /** Why the job paused itself, when it did. Blank when a person paused it. */
+    public String pausedFor = "";
     public long startedAtMillis;
     public long activeMillis;
 
@@ -75,6 +77,36 @@ public final class Job {
         return inFlight;
     }
 
+    private transient long lastSizeCheckAt;
+
+    /**
+     * Null while the world folder is under {@code stopAtWorldGigabytes}, otherwise why it is
+     * not. Walks the save folder, which is a few thousand files at most at these sizes, so it
+     * is run once a minute at the most and never per tick.
+     */
+    public static String worldTooBig(MinecraftServer server) {
+        double limit = Config.get().stopAtWorldGigabytes;
+        if (limit <= 0) return null;
+        java.nio.file.Path root = server.getSavePath(net.minecraft.util.WorldSavePath.ROOT);
+        long bytes = 0;
+        try (var files = Files.walk(root)) {
+            bytes = files.filter(Files::isRegularFile).mapToLong(f -> {
+                try {
+                    return Files.size(f);
+                } catch (Exception e) {
+                    return 0L;
+                }
+            }).sum();
+        } catch (Exception e) {
+            WorldgrowServer.LOG.warn("could not measure the world folder", e);
+            return null;
+        }
+        double gb = bytes / (1024.0 * 1024.0 * 1024.0);
+        if (gb < limit) return null;
+        return String.format(Locale.ROOT, "the world folder is %.1f GB, at the %.1f GB limit "
+                + "(stopAtWorldGigabytes in worldgrow.json)", gb, limit);
+    }
+
     public static String saveId(MinecraftServer server) {
         return server.getSavePath(net.minecraft.util.WorldSavePath.ROOT)
                 .toAbsolutePath().normalize().toString();
@@ -97,7 +129,7 @@ public final class Job {
         }
         long now = System.currentTimeMillis();
         if (paused) {
-            waitingFor = "paused";
+            waitingFor = pausedFor == null || pausedFor.isBlank() ? "paused" : "paused: " + pausedFor;
             lastTickMillis = 0;
             return;
         }
@@ -148,6 +180,18 @@ public final class Job {
             // job holds a growing pile of chunks in memory until the next autosave.
             server.saveAll(true, false, false);
             save();
+            if (now - lastSizeCheckAt > 60_000) {
+                lastSizeCheckAt = now;
+                String full = worldTooBig(server);
+                if (full != null) {
+                    paused = true;
+                    pausedFor = full;
+                    waitingFor = "paused: " + full;
+                    save();
+                    WorldgrowServer.LOG.warn("worldgrow paused: {}", full);
+                    return;
+                }
+            }
         }
 
         if (cfg.logEverySeconds > 0 && now - lastLogAt > cfg.logEverySeconds * 1000L) {

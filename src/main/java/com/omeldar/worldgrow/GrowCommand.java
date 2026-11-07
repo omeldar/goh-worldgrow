@@ -112,6 +112,11 @@ public final class GrowCommand {
         Config cfg = Config.get();
         double perSecond = Math.max(1, cfg.chunksPerTick) * 20.0;
 
+        int cap = Config.get().maxRadiusBlocks;
+        if (cap > 0 && radiusBlocks > cap) {
+            reply(source, "note: that is over the " + cap + " block cap, so start would refuse it",
+                    Formatting.YELLOW);
+        }
         reply(source, String.format(Locale.ROOT, "radius %d blocks = %,d chunks", radiusBlocks, cells),
                 Formatting.AQUA);
         reply(source, String.format(Locale.ROOT,
@@ -158,6 +163,19 @@ public final class GrowCommand {
                     + "/worldgrow stop first.", Formatting.YELLOW);
             return 1;
         }
+        int cap = Config.get().maxRadiusBlocks;
+        if (cap > 0 && radiusBlocks > cap) {
+            reply(source, "refused: a radius of " + radiusBlocks + " blocks is over the "
+                    + cap + " block cap (maxRadiusBlocks in worldgrow.json). Some hosts, "
+                    + "Shockbyte among them, do not allow pregeneration beyond 10,000.",
+                    Formatting.RED);
+            return 0;
+        }
+        String full = Job.worldTooBig(source.getServer());
+        if (full != null) {
+            reply(source, "refused: " + full, Formatting.RED);
+            return 0;
+        }
         Job job = new Job();
         job.dimension = world.getRegistryKey().getValue().toString();
         job.save = Job.saveId(source.getServer());
@@ -184,7 +202,15 @@ public final class GrowCommand {
             reply(source, "nothing to " + (paused ? "pause" : "resume"), Formatting.GRAY);
             return 1;
         }
+        if (!paused) {
+            String full = Job.worldTooBig(source.getServer());
+            if (full != null) {
+                reply(source, "still refusing: " + full, Formatting.RED);
+                return 0;
+            }
+        }
         job.paused = paused;
+        job.pausedFor = "";
         job.save();
         if (!paused) WorldgrowServer.keepAwake(source.getServer());
         reply(source, paused ? "paused" : "resumed", Formatting.GREEN);

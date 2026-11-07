@@ -40,6 +40,18 @@ public final class Config {
      * player somebody is always online, so honouring it there would mean never running.
      */
     public boolean pauseWhenPlayersOnline = true;
+    /**
+     * Refuse any job with a larger radius than this, in blocks. 0 for no cap. The default
+     * matches hosts that limit pregeneration (Shockbyte caps it at a 10,000 block radius and
+     * blocks pregenerators that cannot be capped).
+     */
+    public int maxRadiusBlocks = 10_000;
+    /**
+     * Pause the job once the world folder reaches this size, in GB. 0 for no limit. The
+     * default matches Shockbyte, whose terms do not allow pregenerated chunks in a world over
+     * 5 GB.
+     */
+    public double stopAtWorldGigabytes = 5.0;
     /** After this many chunks, flush to disk so the generated ones can be unloaded again. */
     public int saveEveryChunks = 256;
     /** Report progress to the log this often, in seconds. 0 to stay quiet. */

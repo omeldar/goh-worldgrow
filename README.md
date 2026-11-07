@@ -67,6 +67,19 @@ the machine has headroom, raise `chunksPerTick` and `maxInFlight`, or turn off
 In single player that setting does nothing, because you are always online and it would never
 run. The tick budget still applies, so you can play while it works.
 
+### Host limits
+
+Two caps are on by default, set to match Shockbyte's terms, because that is where the GoH server
+runs:
+
+- `maxRadiusBlocks` (10,000): `start` refuses anything bigger, and `plan` says so. Shockbyte
+  caps pregeneration at a 10,000 block radius and blocks pregenerators that have no such cap.
+- `stopAtWorldGigabytes` (5): the job pauses itself once the world folder reaches 5 GB, since
+  Shockbyte does not allow pregenerated chunks in a world above that, and `resume` refuses while
+  it is over. The check walks the world folder once a minute at most.
+
+Both can be set to 0 on a host that does not care.
+
 ## It keeps an empty server awake, and only then
 
 Since 1.21.2 a dedicated server stops ticking once it has been empty for
