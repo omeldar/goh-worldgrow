@@ -1,6 +1,6 @@
 package com.omeldar.worldgrow;
 
-import net.fabricmc.api.DedicatedServerModInitializer;
+import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  * <p>It generates terrain exactly as vanilla would have; it only changes <em>when</em>. The
  * chunks it writes are byte-for-byte what a player walking there would have caused.
  */
-public final class WorldgrowServer implements DedicatedServerModInitializer {
+public final class WorldgrowServer implements ModInitializer {
     public static final Logger LOG = LoggerFactory.getLogger("worldgrow");
 
     private static Job job;
@@ -40,14 +40,14 @@ public final class WorldgrowServer implements DedicatedServerModInitializer {
     }
 
     @Override
-    public void onInitializeServer() {
+    public void onInitialize() {
         Config.load();
         GrowCommand.register();
 
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             if (!Config.get().resumeOnStart) return;
             Job saved = Job.load();
-            if (saved != null && !saved.done()) {
+            if (saved != null && !saved.done() && saved.belongsTo(server)) {
                 job = saved;
                 LOG.info("resuming pregeneration - {}", saved.summary());
             }
@@ -55,7 +55,9 @@ public final class WorldgrowServer implements DedicatedServerModInitializer {
 
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             Job j = job();
-            if (j != null) j.save();
+            // setJob saves the old one on the way out. Forgetting it matters on a client, where
+            // the next world opened in the same session must not inherit this job.
+            if (j != null) setJob(null);
         });
 
         ServerTickEvents.END_SERVER_TICK.register(WorldgrowServer::tick);

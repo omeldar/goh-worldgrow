@@ -10,7 +10,8 @@ people blame on the new area.
 Worldgrow generates it beforehand: slowly, while nobody is on, never while the server is behind,
 and it remembers where it got to across restarts, so a big border just finishes eventually.
 
-**Minecraft 1.21.11 / Fabric, server side.** Nothing on the client.
+**Minecraft 1.21.11 / Fabric, server side.** Nothing on the client. It also runs in single player,
+inside the game's built-in server, which is the easy way to try it first.
 
 ---
 
@@ -62,6 +63,9 @@ evening. They will take days over a large border. That is the right trade: nobod
 the pregeneration, and everybody notices a stuttering server. If you want it faster and you know
 the machine has headroom, raise `chunksPerTick` and `maxInFlight`, or turn off
 `pauseWhenPlayersOnline`.
+
+In single player that setting does nothing, because you are always online and it would never
+run. The tick budget still applies, so you can play while it works.
 
 ## It keeps an empty server awake, and only then
 

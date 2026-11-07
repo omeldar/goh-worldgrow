@@ -86,7 +86,7 @@ public final class GrowCommand {
         reply(source, String.format(Locale.ROOT,
                 "  budget: %d/tick, backs off above %.0f ms/tick%s",
                 cfg.chunksPerTick, cfg.maxMspt,
-                cfg.pauseWhenPlayersOnline ? ", waits while anyone is online" : ""),
+                Config.waitsForPlayers(source.getServer()) ? ", waits while anyone is online" : ""),
                 Formatting.DARK_GRAY);
         return 1;
     }
@@ -123,7 +123,7 @@ public final class GrowCommand {
               + " since generation is usually slower than the request rate and it waits whenever "
               + "the server is busy%s",
                 Job.duration((long) (cells / perSecond)), cfg.chunksPerTick,
-                cfg.pauseWhenPlayersOnline ? " or anyone is online" : ""),
+                Config.waitsForPlayers(source.getServer()) ? " or anyone is online" : ""),
                 Formatting.GRAY);
         reply(source, "  chunks already generated are loaded rather than regenerated, so "
                 + "re-running over an existing area is cheap", Formatting.DARK_GRAY);
@@ -160,6 +160,7 @@ public final class GrowCommand {
         }
         Job job = new Job();
         job.dimension = world.getRegistryKey().getValue().toString();
+        job.save = Job.saveId(source.getServer());
         job.centerChunkX = centre.getX() >> 4;
         job.centerChunkZ = centre.getZ() >> 4;
         job.radiusChunks = (radiusBlocks + 15) / 16;
@@ -169,7 +170,7 @@ public final class GrowCommand {
         // never runs. Wake it from here; the hook takes over from the next tick.
         WorldgrowServer.keepAwake(source.getServer());
         reply(source, "started: " + job.summary(), Formatting.GREEN);
-        if (Config.get().pauseWhenPlayersOnline
+        if (Config.waitsForPlayers(source.getServer())
                 && source.getServer().getPlayerManager().getCurrentPlayerCount() > 0) {
             reply(source, "  it will wait until everyone has logged off, as configured",
                     Formatting.GRAY);

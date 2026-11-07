@@ -30,7 +30,15 @@ public final class Config {
      * has 50 ms; backing off at 25 leaves half the budget for the game itself.
      */
     public double maxMspt = 25.0;
-    /** Do nothing at all while anyone is on the server. */
+
+    /** Whether a job on this server should wait for it to empty. */
+    public static boolean waitsForPlayers(net.minecraft.server.MinecraftServer server) {
+        return get().pauseWhenPlayersOnline && server.isDedicated();
+    }
+    /**
+     * Do nothing at all while anyone is on the server. Dedicated servers only: in single
+     * player somebody is always online, so honouring it there would mean never running.
+     */
     public boolean pauseWhenPlayersOnline = true;
     /** After this many chunks, flush to disk so the generated ones can be unloaded again. */
     public int saveEveryChunks = 256;

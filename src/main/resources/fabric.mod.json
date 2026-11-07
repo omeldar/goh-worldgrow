@@ -11,9 +11,9 @@
     "issues": "https://github.com/omeldar/goh-worldgrow/issues"
   },
   "license": "MIT",
-  "environment": "server",
+  "environment": "*",
   "entrypoints": {
-    "server": ["com.omeldar.worldgrow.WorldgrowServer"]
+    "main": ["com.omeldar.worldgrow.WorldgrowServer"]
   },
   "accessWidener": "worldgrow.accesswidener",
   "depends": {

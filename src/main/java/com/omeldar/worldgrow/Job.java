@@ -32,6 +32,12 @@ public final class Job {
 
     // Persisted state. Plain fields so the progress file is readable by a human.
     public String dimension = "minecraft:overworld";
+    /**
+     * The save folder this job belongs to. A client keeps one config folder for every single
+     * player world, so without this a job started in one save would resume in the next.
+     * Blank in progress files written before it existed, which then resume as they always did.
+     */
+    public String save = "";
     public int centerChunkX;
     public int centerChunkZ;
     public int radiusChunks;
@@ -69,6 +75,15 @@ public final class Job {
         return inFlight;
     }
 
+    public static String saveId(MinecraftServer server) {
+        return server.getSavePath(net.minecraft.util.WorldSavePath.ROOT)
+                .toAbsolutePath().normalize().toString();
+    }
+
+    public boolean belongsTo(MinecraftServer server) {
+        return save == null || save.isBlank() || save.equals(saveId(server));
+    }
+
     public ServerWorld world(MinecraftServer server) {
         RegistryKey<World> key = RegistryKey.of(RegistryKeys.WORLD, Identifier.of(dimension));
         return server.getWorld(key);
@@ -89,7 +104,7 @@ public final class Job {
 
         Config cfg = Config.get();
 
-        if (cfg.pauseWhenPlayersOnline && server.getPlayerManager().getCurrentPlayerCount() > 0) {
+        if (Config.waitsForPlayers(server) && server.getPlayerManager().getCurrentPlayerCount() > 0) {
             waitingFor = "players online";
             lastTickMillis = 0;
             return;
